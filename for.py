@@ -11,13 +11,12 @@
 #     a = int(input())
 #     print("a is ", a)
 # print("loop finished")
-
-a = ["a", 1, 4, "s"]
+3
 # print(a)
 # for i in range(len(a)):
 #     print(a[i], "is at index", i)
 # for each
 # ranged for loop
 
-for i in a:
-    print(i)
+# for i in a:
+#     print(i)
