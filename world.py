@@ -1,12 +1,12 @@
+import tkinter as tk
+from tkinter import messagebox
+
+# ---------- SETTINGS ----------
 budget = 2000
-gamestop = []
+shoppingCart = []
+location = 15
 
-# print(world)
-for i in range(15):
-    gamestop.append(i + 1)
-    # print(world)
-# print(world)
-
+# ---------- STORE DATA ----------
 gamestopNames = [
     "",
     'XBox Consoles',
@@ -24,10 +24,7 @@ gamestopNames = [
     'Cashier',
     'Exit',
     'Entrance'
-    ]
-
-# for i in range(len(gamestop)):
-#     print(f"{gamestop[i]}: {gamestopNames[i]}")
+]
 
 products = {
     1: {"Xbox Series X": 499, "Xbox Series S": 299},
@@ -53,144 +50,165 @@ movement = {
     3: {"Right": 4, "Down": 7, "Left": 2},
     4: {"Right": 5, "Left": 3},
     5: {"Left": 4, "Down": 8},
-    6: {"up" : 1, "Down": 9, "Right": 7},
-    7: {"Left": 6, "Right": 8, "up": 3, "Down": 11},
-    8:{"Left": 7, "Up": 5, "Down": 13},
-    9: { "Up": 6, "Right": 10},
-    10:{"Right": 11, "Left": 9, "Down": 14},
-    11:{"Left": 10, "Right": 12, "Up": 7},
-    12:{"Right": 13, "Left": 11, "Down": 15},
-    13:{"Up": 8, "Left": 12},
-    14:{"Up": 10, "Right": 15},
-    15:{"Up": 12, "Left": 14}    
+    6: {"Up": 1, "Down": 9, "Right": 7},
+    7: {"Left": 6, "Right": 8, "Up": 3, "Down": 11},
+    8: {"Left": 7, "Up": 5, "Down": 13},
+    9: {"Up": 6, "Right": 10},
+    10: {"Right": 11, "Left": 9, "Down": 14},
+    11: {"Left": 10, "Right": 12, "Up": 7},
+    12: {"Right": 13, "Left": 11, "Down": 15},
+    13: {"Up": 8, "Left": 12},
+    14: {"Up": 10, "Right": 15},
+    15: {"Up": 12, "Left": 14}
 }
 
-shoppingCart = []
-location = 15
+# ---------- HELPER FUNCTIONS ----------
 
-def returnLocName (locNum):
-    return gamestopNames[locNum]
+def returnLocName(loc):
+    return gamestopNames[loc]
 
-def returnProducts(locNum):
-    return products[locNum]
+def get_product_price(product):
+    for loc_products in products.values():
+        if product in loc_products:
+            return loc_products[product]
+    return 0
 
-def selectProducts(locNum):
-    global budget
-    availableProducts = returnProducts(locNum)
-    if len(availableProducts) == 0:
-        print("No products available here.")
-        return
-    print(f"You're budget is ${budget}")
-    print("Available products:")
-    for idx, product in enumerate(availableProducts, start=1):
-        print(f"{idx}. {product} - ${availableProducts[product]}")
-    choice = input("Type the number of the product to add to your cart (or '0' to cancel): ")
-    
-    while choice != 0:
-        try:
-            choice = int(choice)
-            
-            if choice == 0:
-                return
-            if 1 <= choice <= len(availableProducts):
-                product_names = list(availableProducts.keys())
-                product_price = availableProducts[product_names[choice - 1]]
-                
-                if budget - product_price < 0:
-                    print(f"Insufficient budget! This item costs ${product_price} but you only have ${budget}.")
-                else:
-                    shoppingCart.append(product_names[choice - 1])
-                    print(f"{product_names[choice - 1]} added to your cart.")
-                    budget -= product_price
-                    print(f"Remaining budget: ${budget}")
-            else:
-                print("Invalid choice.")
-        except ValueError:
-            print("Please enter a valid number.")
-        choice = input("Type the number of the product to add to your cart (or '0' to cancel): ")
+def calculate_cart_total():
+    return sum(get_product_price(item) for item in shoppingCart)
 
-def returnItemsInCart():
-    global location, budget, shoppingCart
+# ---------- GAME LOGIC ----------
 
-    if location != 13:
-        print("You can only return items at the cashier.")
-        return
-    
-    if not shoppingCart:
-        print("Your cart is empty. Nothing to return.")
-        return
-    
-    print("Items in your cart:")
-    for idx, item in enumerate(shoppingCart, start=1):
-        # Find the price of the item
-        price = 0
-        for location_id, location_products in products.items():
-            if item in location_products:
-                price = location_products[item]
-                break
-        print(f"{idx}. {item} - ${price}")
-    
-    choice = input("Type the number of the item to return (or '0' to cancel): ")
-    while choice != 0:
-        try:
-            choice = int(choice)
-            
-            if choice == 0:
-                return
-            if 1 <= choice <= len(shoppingCart):
-                returned_item = shoppingCart[choice - 1]
-                # Find the price of the returned item
-                refund_amount = 0
-                for location_id, location_products in products.items():
-                    if returned_item in location_products:
-                        refund_amount = location_products[returned_item]
-                        break
-                
-                shoppingCart.pop(choice - 1)
-                budget += refund_amount
-                print(f"{returned_item} returned! You received ${refund_amount} refund.")
-                print(f"Current budget: ${budget}")
-                print("\nUpdated cart:")
-                if shoppingCart:
-                    for idx, item in enumerate(shoppingCart, start=1):
-                        # Find the price of the item
-                        price = 0
-                        for location_id, location_products in products.items():
-                            if item in location_products:
-                                price = location_products[item]
-                                break
-                        print(f"{idx}. {item} - ${price}")
-                else:
-                    print("Your cart is now empty.")
-            else:
-                print("Invalid choice.")
-        except ValueError:
-            print("Please enter a valid number.")
-        choice = input("Type the number of the item to return (or '0' to cancel): ")
-        
-
-
-
-def moveFunction():
+def change_location(direction):
     global location
-    
-    print(f"\n--- {returnLocName(location)} (Location {location}) ---")
-    print("You can go to:")
-    for direction, destination in movement[location].items():
-        print(f"  {direction}: {returnLocName(destination)}")
-    
-    moving = input("Type direction to go (or '0' to skip): ")
+    if direction in movement[location]:
+        location = movement[location][direction]
+        update_gui()
 
-    if moving == "0":
+def add_to_cart(product):
+    global budget
+    price = get_product_price(product)
+
+    if budget < price:
+        messagebox.showwarning("Budget Warning", "Not enough money!")
         return
-    elif moving in movement[location]:
-        location = movement[location][moving]
-        print(f"\nMoved to {returnLocName(location)} (Location {location})")
-        print("Available products:", returnProducts(location))
-        selectProducts(location)
-        returnItemsInCart()
-    else:
-        print("Movement not possible")
 
-while True:
-    moveFunction()
+    shoppingCart.append(product)
+    budget -= price
+    update_gui()
+
+def return_item():
+    sel = cart_list.curselection()
+    if not sel:
+        return
+
+    index = sel[0]
+    item = shoppingCart.pop(index)
+    refund = get_product_price(item)
+
+    global budget
+    budget += refund
+    update_gui()
+
+# ---------- GUI ----------
+
+def update_gui():
+    location_label.config(
+        text=f"{returnLocName(location)}  |  Location {location}",
+        fg="#00ffcc"
+    )
+
+    budget_label.config(
+        text=f"Budget: ${budget}   |   Cart Total: ${calculate_cart_total()}"
+    )
+
+    # Clear direction buttons
+    for widget in directions_frame.winfo_children():
+        widget.destroy()
+
+    # Create direction buttons
+    for direction in ["Up", "Down", "Left", "Right"]:
+        state = tk.NORMAL if direction in movement[location] else tk.DISABLED
+        btn = tk.Button(
+            directions_frame,
+            text=direction,
+            width=8,
+            state=state,
+            command=lambda d=direction: change_location(d),
+            bg="#333",
+            fg="white"
+        )
+        btn.pack(side=tk.LEFT, padx=5)
+
+    # Clear products
+    for widget in products_frame.winfo_children():
+        widget.destroy()
+
+    available = products[location]
+
+    if not available:
+        tk.Label(products_frame, text="No products here.", bg="#222", fg="white").pack()
+    else:
+        for product, price in available.items():
+            btn = tk.Button(
+                products_frame,
+                text=f"{product}  -  ${price}",
+                anchor="w",
+                width=40,
+                command=lambda p=product: add_to_cart(p),
+                bg="#444",
+                fg="white"
+            )
+            btn.pack(pady=2)
+
+    # Update cart
+    cart_list.delete(0, tk.END)
+    for item in shoppingCart:
+        price = get_product_price(item)
+        cart_list.insert(tk.END, f"{item} - ${price}")
+
+def start_gui():
+    global root, location_label, budget_label, directions_frame, products_frame, cart_list
+
+    root = tk.Tk()
+    root.title("🎮 GameStore Explorer")
+    root.geometry("700x600")
+    root.configure(bg="#111")
+
+    title = tk.Label(root, text="GameStore Explorer", font=("Arial", 20, "bold"),
+                     bg="#111", fg="#00ffcc")
+    title.pack(pady=10)
+
+    location_label = tk.Label(root, font=("Arial", 14),
+                              bg="#111", fg="white")
+    location_label.pack(pady=5)
+
+    budget_label = tk.Label(root, font=("Arial", 12),
+                            bg="#111", fg="white")
+    budget_label.pack(pady=5)
+
+    directions_frame = tk.Frame(root, bg="#111")
+    directions_frame.pack(pady=10)
+
+    products_frame = tk.LabelFrame(root, text="Products",
+                                   bg="#222", fg="white",
+                                   font=("Arial", 12, "bold"))
+    products_frame.pack(padx=10, pady=10, fill="both")
+
+    cart_frame = tk.LabelFrame(root, text="Shopping Cart",
+                               bg="#222", fg="white",
+                               font=("Arial", 12, "bold"))
+    cart_frame.pack(padx=10, pady=10, fill="both")
+
+    cart_list = tk.Listbox(cart_frame, width=60, height=6,
+                           bg="#333", fg="white")
+    cart_list.pack(pady=5)
+
+    tk.Button(cart_frame, text="Return Selected Item",
+              command=return_item,
+              bg="#aa3333", fg="white").pack(pady=5)
+
+    update_gui()
+    root.mainloop()
+
+if __name__ == "__main__":
+    start_gui()
